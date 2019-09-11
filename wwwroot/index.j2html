@@ -1,0 +1,17 @@
+{% extends "/_layouts/default.html" %}
+
+{% block content %}
+Boost::Beast with Jinja2C++ templates project demo
+{% endblock %}
+
+{# <!DOCTYPE html>
+{% set Title='Boost::Beast with Jinja2C++ templates project demo' %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ Title }}</title>
+</head>
+<body>
+{{ Title }}
+</body>
+</html> #}
