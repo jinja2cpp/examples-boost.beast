@@ -7,12 +7,6 @@
 // Official repository: https://github.com/boostorg/beast
 //
 
-//------------------------------------------------------------------------------
-//
-// Example: HTTP server, asynchronous
-//
-//------------------------------------------------------------------------------
-
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
@@ -162,22 +156,16 @@ void HandleRequest(jinja2::TemplateEnv* env, const std::string& docRoot, http::r
     auto const sendTemplate = [&req, &serverError](jinja2::Template& tpl, auto& ext, auto& send) {
         jinja2::ValuesMap params{};
 
-          std::cout << "---- #1 " << std::endl;
-            auto renderResult = tpl.RenderAsString(params);
-          std::cout << "---- #2 " << std::endl;
+        auto renderResult = tpl.RenderAsString(params);
         if (!renderResult)
         {
-            std::cout << "---- #3 " << std::endl;
             std::ostringstream os;
             os << renderResult.error();
-            std::cout << "---- #4 " << std::endl;
             return send(serverError(os.str()));
         }
 
-      std::cout << "---- #5 " << std::endl;
         auto& body = renderResult.value();
         auto size = body.size();
-      std::cout << "---- #6 " << std::endl;
 
         if (req.method() == http::verb::head)
         {
@@ -224,28 +212,21 @@ void HandleRequest(jinja2::TemplateEnv* env, const std::string& docRoot, http::r
     templateName += ".j2";
     templateName.append(fileExt.begin(), fileExt.end());
 
-    std::cout << "---- #7 " << std::endl;
     auto loadResult = env->LoadTemplate(templateName);
 
-    std::cout << "---- #8 " << std::endl;
     if (loadResult)
     {
-        std::cout << "---- #9 " << std::endl;
         return sendTemplate(loadResult.value(), fileExt, send);
     }
     else
     {
-        std::cout << "---- #10 " << std::endl;
         auto& error = loadResult.error();
         if (error.GetCode() != jinja2::ErrorCode::FileNotFound)
         {
-            std::cout << "---- #11 " << std::endl;
             std::ostringstream os;
             os << loadResult.error();
-            std::cout << "---- #12 " << std::endl;
             return send(serverError(os.str()));
         }
-        std::cout << "---- #13 " << std::endl;
     }
 
     std::string path = PathCat(docRoot, requestPath);
