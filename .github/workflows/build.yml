@@ -14,6 +14,7 @@ jobs:
         sudo apt-get install -y cmake build-essential
     - name: Setup conan
       run: |
+        pip install --upgrade pip
         pip install --user conan
         conan remote add martin https://api.bintray.com/conan/martinmoene/nonstd-lite
         conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
