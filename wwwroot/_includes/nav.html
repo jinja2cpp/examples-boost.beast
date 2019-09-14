@@ -1,12 +1,29 @@
 <nav role="navigation" aria-label="Main navigation">
   <ul class="navigation-list">
-    {%- assign pages_list = site.html_pages | sort:"nav_order" -%}
+    {% set root_path = '/' %}
+    {% for page in site.pages recursive %}
+    {% set nav_level = loop.depth0 %}
+    {% set link = root_path + page.name + ('/' if page.name | replace('.', '_') == page.name else '') %}
+    {% if nav_level == 0 and page.name == '' %}{% set link = '/' %}{% endif %}
+    {% if loop.depth0 == 0 or page.name != '' %}
+    <li class="navigation-list-item{{ ' active' if page.name == page_path[nav_level].name}}">
+      <a href="{{ link }}" class="navigation-list-link{{ ' active' if page.name == page_path[nav_level].name }}">{{
+        page.title }}</a>
+      {% if page.name == page_path[nav_level].name and page.pages is defined %}
+      <ul class="navigation-list-child-list ">
+        {% set root_path = link %}
+        {{ loop(page.pages) }}
+      </ul>
+      {% endif %}
+      {% endif %}
+      {% endfor %}
+      {# %- assign pages_list = site.html_pages | sort:"nav_order" -%}
     {%- for node in pages_list -%}
       {%- unless node.nav_exclude -%}
         {%- if node.parent == nil -%}
           <li class="navigation-list-item{% if page.url == node.url or page.parent == node.title or page.grand_parent == node.title %} active{% endif %}">
             {%- if page.parent == node.title or page.grand_parent == node.title -%}
-              {%- assign first_level_url = node.url | absolute_url -%}
+            {%- assign first_level_url = node.url | absolute_url -%}
             {%- endif -%}
             <a href="{{ node.url | absolute_url }}" class="navigation-list-link{% if page.url == node.url %} active{% endif %}">{{ node.title }}</a>
             {%- if node.has_children -%}
@@ -35,6 +52,6 @@
           </li>
         {%- endif -%}
       {%- endunless -%}
-    {%- endfor -%}
+    {%- endfor -% #}
   </ul>
 </nav>

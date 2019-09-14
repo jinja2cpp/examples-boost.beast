@@ -14,12 +14,17 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/config.hpp>
+#include <jinja2cpp/binding/nlohmann_json.h>
 #include <jinja2cpp/filesystem_handler.h>
+#include <jinja2cpp/generic_list_iterator.h>
 #include <jinja2cpp/template.h>
 #include <jinja2cpp/template_env.h>
+#include <jinja2cpp/user_callable.h>
+#include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <cstdlib>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -29,6 +34,27 @@
 
 using tcp = boost::asio::ip::tcp;    // from <boost/asio/ip/tcp.hpp>
 namespace http = boost::beast::http; // from <boost/beast/http.hpp>
+
+namespace jinja2
+{
+template<class Body, class Allocator>
+struct TypeReflection<http::request<Body, http::basic_fields<Allocator>>> : TypeReflected<http::request<Body, http::basic_fields<Allocator>>>
+{
+    using ReqT = http::request<Body, http::basic_fields<Allocator>>;
+    static auto& GetAccessors()
+    {
+        static std::unordered_map<std::string, FieldAccessor> accessors = {
+            { "path",
+              [](const ReqT& obj) {
+                  auto& val = obj.target();
+                  return nonstd::string_view(val.begin(), val.size());
+              } },
+        };
+
+        return accessors;
+    }
+};
+}
 
 auto SplitFileName(boost::beast::string_view path)
 {
@@ -113,6 +139,61 @@ std::string PathCat(boost::beast::string_view base, boost::beast::string_view pa
     return result;
 }
 
+template<typename Path>
+std::string AppendDefaultPage(const Path& path)
+{
+    std::string requestPath(path.begin(), path.end());
+    if (requestPath.back() == '/')
+        requestPath += "index.html";
+
+    return requestPath;
+}
+
+jinja2::Value FindPage(const jinja2::GenericList& pages, const nonstd::string_view& current, const std::string& root, jinja2::ValuesList* breadcrumb)
+{
+    for (auto& pageVal : pages)
+    {
+        const jinja2::GenericMap* page = nonstd::get_if<jinja2::GenericMap>(&pageVal.data());
+        if (!page)
+            continue;
+        auto fileNameVal = page->GetValueByName("name");
+        if (fileNameVal.isEmpty())
+            continue;
+        auto fileName = jinja2::AsString(fileNameVal);
+        auto path = root + fileName;
+        if (path == current)
+        {
+            if (breadcrumb)
+                breadcrumb->push_back(pageVal);
+            return pageVal;
+        }
+
+        auto pagesVal = page->GetValueByName("pages");
+        const jinja2::GenericList* subPages = nonstd::get_if<jinja2::GenericList>(&pagesVal.data());
+        if (subPages != 0)
+        {
+            auto result = FindPage(*subPages, current, path + "/", breadcrumb);
+            if (!result.isEmpty())
+            {
+                if (breadcrumb)
+                    breadcrumb->insert(breadcrumb->begin(), pageVal);
+                return result;
+            }
+        }
+    }
+
+    return jinja2::Value();
+}
+
+jinja2::Value GetPageInfo(const jinja2::GenericList& pages, const nonstd::string_view& current)
+{
+    jinja2::ValuesList breadcrumb;
+
+    auto page = FindPage(pages, current, "/", &breadcrumb);
+
+    return jinja2::ValuesMap{ { "page", std::move(page) }, { "path", std::move(breadcrumb) } };
+}
+
 // This function produces an HTTP response for the given
 // request. The type of the response object depends on the
 // contents of the request, so the interface requires the
@@ -154,7 +235,7 @@ void HandleRequest(jinja2::TemplateEnv* env, const std::string& docRoot, http::r
     };
 
     auto const sendTemplate = [&req, &serverError](jinja2::Template& tpl, auto& ext, auto& send) {
-        jinja2::ValuesMap params{};
+        jinja2::ValuesMap params{ { "request", jinja2::Reflect(req) } };
 
         auto renderResult = tpl.RenderAsString(params);
         if (!renderResult)
@@ -195,9 +276,7 @@ void HandleRequest(jinja2::TemplateEnv* env, const std::string& docRoot, http::r
         return send(badRequest("Illegal request-target"));
 
     // Build the path to the requested file
-    std::string requestPath(req.target().begin(), req.target().end());
-    if (requestPath.back() == '/')
-        requestPath += "index.html";
+    auto requestPath = AppendDefaultPage(req.target());
 
     std::cout << "---- Requested resource: " << requestPath << std::endl;
 
@@ -480,6 +559,16 @@ int main(int argc, char* argv[])
     setts.extensions.Do = true;
     setts.lstripBlocks = true;
     setts.trimBlocks = true;
+
+    auto jsonPath = PathCat(docRoot, "/.site_info.json");
+    std::cout << "---- Read site info from " << jsonPath << std::endl;
+
+    nlohmann::json siteInfo;
+    std::ifstream jsonStream(jsonPath);
+
+    jsonStream >> siteInfo;
+    env.AddGlobal("site", jinja2::Reflect(std::move(siteInfo)));
+    env.AddGlobal("__GetPageInfo", jinja2::MakeCallable(GetPageInfo, jinja2::ArgInfo{ "pages" }, jinja2::ArgInfo{ "path" }));
 
     env.AddFilesystemHandler(std::string(), fs);
 

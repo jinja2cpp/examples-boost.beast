@@ -1,0 +1,32 @@
+{
+  "title": "Jinja2C++ site demo",
+  "url": "http://localhost:8080/",
+  "pages": [
+    {
+      "name": "",
+      "title": "Home"
+    },
+    {
+      "name": "basics",
+      "title": "Basics",
+      "pages": [
+        {
+          "name": "",
+          "title": "Basics"
+        },
+        {
+          "name": "env_setup.html",
+          "title": "Environment setup"
+        },
+        {
+          "name": "request_handling.html",
+          "title": "Request handling"
+        }
+      ]
+    },
+    {
+      "name": "advanced",
+      "title": "Advanced"
+    }
+  ]
+}

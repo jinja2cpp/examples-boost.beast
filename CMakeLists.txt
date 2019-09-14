@@ -10,6 +10,8 @@ conan_cmake_run(REQUIRES
                     jinja2cpp/1.0.0@flexferrum/testing
                     gtest/1.7.0@bincrafters/stable
                     boost_beast/1.69.0@bincrafters/stable
+        jsonformoderncpp/3.7.0@vthiery/stable
+
                 BASIC_SETUP
                 ${CONAN_SETTINGS}
                 OPTIONS 
