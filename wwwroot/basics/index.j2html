@@ -5,4 +5,8 @@ Boost::Beast with Jinja2C++ templates project demo<br/>
 {{ request.path }}<br/>
 {{ page | pprint }}<br/>
 {{ page_path | pprint }}<br/>
+
+{{ tok() }}
+
 {% endblock %}
+

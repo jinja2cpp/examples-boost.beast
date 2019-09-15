@@ -40,13 +40,14 @@ namespace jinja2
 template<class Body, class Allocator>
 struct TypeReflection<http::request<Body, http::basic_fields<Allocator>>> : TypeReflected<http::request<Body, http::basic_fields<Allocator>>>
 {
+    using FieldAccessor = typename TypeReflected<http::request<Body, http::basic_fields<Allocator>>>::FieldAccessor;
     using ReqT = http::request<Body, http::basic_fields<Allocator>>;
     static auto& GetAccessors()
     {
         static std::unordered_map<std::string, FieldAccessor> accessors = {
             { "path",
               [](const ReqT& obj) {
-                  auto& val = obj.target();
+                  auto val = obj.target();
                   return nonstd::string_view(val.begin(), val.size());
               } },
         };
@@ -569,6 +570,8 @@ int main(int argc, char* argv[])
     jsonStream >> siteInfo;
     env.AddGlobal("site", jinja2::Reflect(std::move(siteInfo)));
     env.AddGlobal("__GetPageInfo", jinja2::MakeCallable(GetPageInfo, jinja2::ArgInfo{ "pages" }, jinja2::ArgInfo{ "path" }));
+    if (port != 80 && port != 443)
+        env.AddGlobal("__site_port", static_cast<int64_t>(port));
 
     env.AddFilesystemHandler(std::string(), fs);
 

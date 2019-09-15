@@ -1,8 +1,25 @@
 {% extends "/_layouts/default.html" %}
 
 {% block content %}
-Boost::Beast with Jinja2C++ templates project demo<br/>
-{{ request.path }}<br/>
-{{ page | pprint }}<br/>
-{{ page_path | pprint }}<br/>
+<h1> Boost.Beast and Jinja2C++ site demonstration </h1>
+<p class="fs-6 fw-300">This sample site demonstrates the power of combination Boost.Beast http server library and Jinja2
+    templates implemented by Jinja2C++ library.</p>
+<p>For a long time C++ was not a good choice for web development. And there were at least two reasons for that:
+<ul>
+    <li>Absence of the good HTTP(S) server implementation for C++</li>
+    <li>Absence of the good HTML template library for C++</li>
+</ul>
+But thinks has been changing. New language standards was introduced. New libraries written. For instance, <a
+        href="https://github.com/boostorg/beast"><b>Boost.Beast</b></a>
+library, the powerful HTTP/2.0 web server implementation based on Boost.Asio. <a href="https://jinja2cpp.dev"><b>Jinja2C++</b></a>,
+the port of the famous Jinja2 python template engine. Altogether these tools can significantly simplify C++ web development
+and allow developers to implement web sites fast.
+</p>
+<p>The full implementation of this particular sample web site takes only about 600 lines of code. The most of the work
+    for visual representation performs within Jinja2 templates which can be freely edited on the running web server,
+    without
+    stopping it. Structure of the site described in the special JSON file which is directly mapped into template and can
+    be accessed. The design was taken from the <a href="Just the Docs"><b>Just the Docs</b></a> theme for Jekyll. Some
+    templates
+    was refactored and reimplemented on Jinja2 templates.
 {% endblock %}

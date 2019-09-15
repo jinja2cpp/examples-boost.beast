@@ -3,6 +3,7 @@
 {% block content %}
 Boost::Beast with Jinja2C++ templates project demo<br/>
 {{ request.path }}<br/>
-{{ page | pprint }}<br/>
-{{ page_path | pprint }}<br/>
+<b>Page:</b> {{ page | pprint }}<br/>
+<b>Page path:</b>{{ page_path | pprint }}<br/>
+<b>Page parent:</b>{{ page_parent | pprint }}<br/>
 {% endblock %}
