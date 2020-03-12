@@ -360,7 +360,7 @@ class HttpSession : public std::enable_shared_from_this<HttpSession>
 {
 
     tcp::socket m_socket;
-    boost::asio::strand<boost::asio::io_context::executor_type> m_strand;
+    boost::asio::strand<boost::asio::executor> m_strand;
     boost::beast::flat_buffer m_buffer;
     std::shared_ptr<std::string const> doc_root_;
     http::request<http::string_body> m_req;
